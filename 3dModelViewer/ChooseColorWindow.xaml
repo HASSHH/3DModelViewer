@@ -1,0 +1,31 @@
+﻿<Window x:Class="_3dModelViewer.ChooseColorWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:_3dModelViewer"
+        mc:Ignorable="d"
+        Title="Color Picker" Height="300" Width="300">
+    <Window.DataContext>
+        <local:ChooseColorViewModel Saturation="1" Value="1" Hue="180"/>
+    </Window.DataContext>
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <Rectangle Grid.Row="0" Fill="{Binding Brush}"/>
+        <StackPanel Grid.Row="1">
+            <Label Content="Hue"/>
+            <Slider Minimum="0" Maximum="360" Value="{Binding Hue}"/>
+            <Label Content="Saturation"/>
+            <Slider Minimum="0" Maximum="1" Value="{Binding Saturation}"/>
+            <Label Content="Value"/>
+            <Slider Minimum="0" Maximum="1" Value="{Binding Value}"/>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                <Button Content="OK" Click="OkButton_Click" Width="50" Margin="10, 10, 10, 0"/>
+                <Button Content="Cancel" Click="CancelButton_Click" Width="50" Margin="10, 10, 10, 0"/>
+            </StackPanel>
+        </StackPanel>
+    </Grid>
+</Window>
