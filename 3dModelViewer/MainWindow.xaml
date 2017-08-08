@@ -8,7 +8,9 @@
         Title="3D Model Viewer" Height="700" Width="1000"
         Loaded="Window_Loaded">
     <Window.DataContext>
-        <local:MainWindowViewModel RotationAngle="0" ScaleFactor="1" TranslateX="0" TranslateY="0" TranslateZ="0"/>
+        <local:MainWindowViewModel RotationAngle="0" ScaleFactor="1" 
+                                   TranslateXAfter="0" TranslateYAfter="0" TranslateZAfter="0"
+                                   TranslateXBefore="0" TranslateYBefore="0" TranslateZBefore="0"/>
     </Window.DataContext>
     <Window.Resources>
         <local:EnumBooleanConverter x:Key="EnumBooleanConverter"/>
@@ -32,16 +34,17 @@
                 <Label Grid.Row="0" Content="Model transform" HorizontalContentAlignment="Center"/>
                 <Grid Grid.Row="1">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition/>
-                        <ColumnDefinition/>
-                        <ColumnDefinition/>
+                        <ColumnDefinition Width="231*"/>
+                        <ColumnDefinition Width="173*"/>
+                        <ColumnDefinition Width="57*"/>
+                        <ColumnDefinition Width="231*"/>
                     </Grid.ColumnDefinitions>
                     <StackPanel Grid.Column="0" Style="{StaticResource ComponentStackPanel}">
                         <Label Content="Scaling" Style="{StaticResource ComponentLabel}"/>
                         <Label Content="Scale factor:"/>
                         <TextBox Text="{Binding ScaleFactor, UpdateSourceTrigger=Explicit}" TextChanged="TextBox_TextChanged"/>
                     </StackPanel>
-                    <StackPanel Grid.Column="1" Style="{StaticResource ComponentStackPanel}">
+                    <StackPanel Grid.Column="1" Style="{StaticResource ComponentStackPanel}" Grid.ColumnSpan="2">
                         <Label Content="Rotation" Style="{StaticResource ComponentLabel}"/>
                         <Slider Minimum="0" Maximum="360" Value="{Binding RotationAngle}" TickFrequency="1" IsSnapToTickEnabled="True" AutoToolTipPlacement="TopLeft" AutoToolTipPrecision="0"/>
                         <Grid Margin="10">
@@ -61,8 +64,10 @@
                         <Button Content="Undo last rotation" Click="UndoRotationButton_Click"/>
                         <Button Content="Clear all rotations"/>
                     </StackPanel>
-                    <StackPanel Grid.Column="2" Style="{StaticResource ComponentStackPanel}">
+                    <StackPanel Grid.Column="3" Style="{StaticResource ComponentStackPanel}">
                         <Label Content="Translation" Style="{StaticResource ComponentLabel}"/>
+                        <Button Content="Auto center" Click="AutoCenterButton_Click"/>
+                        <Label Content="Before rotations:"/>
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition/>
@@ -71,15 +76,35 @@
                             </Grid.ColumnDefinitions>
                             <DockPanel Grid.Column="0">
                                 <Label DockPanel.Dock="Left" Content="X:"/>
-                                <TextBox Text="{Binding TranslateX, UpdateSourceTrigger=Explicit}" TextChanged="TextBox_TextChanged"/>
+                                <TextBox Text="{Binding TranslateXBefore, UpdateSourceTrigger=Explicit}" TextChanged="TextBox_TextChanged"/>
                             </DockPanel>
                             <DockPanel Grid.Column="1">
                                 <Label DockPanel.Dock="Left" Content="Y:"/>
-                                <TextBox Text="{Binding TranslateY, UpdateSourceTrigger=Explicit}" TextChanged="TextBox_TextChanged"/>
+                                <TextBox Text="{Binding TranslateYBefore, UpdateSourceTrigger=Explicit}" TextChanged="TextBox_TextChanged"/>
                             </DockPanel>
                             <DockPanel Grid.Column="2">
                                 <Label DockPanel.Dock="Left" Content="Z:"/>
-                                <TextBox Text="{Binding TranslateZ, UpdateSourceTrigger=Explicit}" TextChanged="TextBox_TextChanged"/>
+                                <TextBox Text="{Binding TranslateZBefore, UpdateSourceTrigger=Explicit}" TextChanged="TextBox_TextChanged"/>
+                            </DockPanel>
+                        </Grid>
+                        <Label Content="After rotations:" Margin="0,10,0,0"/>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition/>
+                                <ColumnDefinition/>
+                                <ColumnDefinition/>
+                            </Grid.ColumnDefinitions>
+                            <DockPanel Grid.Column="0">
+                                <Label DockPanel.Dock="Left" Content="X:"/>
+                                <TextBox Text="{Binding TranslateXAfter, UpdateSourceTrigger=Explicit}" TextChanged="TextBox_TextChanged"/>
+                            </DockPanel>
+                            <DockPanel Grid.Column="1">
+                                <Label DockPanel.Dock="Left" Content="Y:"/>
+                                <TextBox Text="{Binding TranslateYAfter, UpdateSourceTrigger=Explicit}" TextChanged="TextBox_TextChanged"/>
+                            </DockPanel>
+                            <DockPanel Grid.Column="2">
+                                <Label DockPanel.Dock="Left" Content="Z:"/>
+                                <TextBox Text="{Binding TranslateZAfter, UpdateSourceTrigger=Explicit}" TextChanged="TextBox_TextChanged"/>
                             </DockPanel>
                         </Grid>
                     </StackPanel>

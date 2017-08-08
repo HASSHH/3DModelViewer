@@ -74,16 +74,29 @@ namespace _3dModelViewer
                         }
                     }
                     break;
-                case "TranslateX":
-                case "TranslateY":
-                case "TranslateZ":
+                case "TranslateXAfter":
+                case "TranslateYAfter":
+                case "TranslateZAfter":
                     if (loadedModel != null)
                     {
                         float translateX, translateY, translateZ;
-                        if (float.TryParse(vm.TranslateX, out translateX) && float.TryParse(vm.TranslateY, out translateY) && float.TryParse(vm.TranslateZ, out translateZ))
+                        if (float.TryParse(vm.TranslateXAfter, out translateX) && float.TryParse(vm.TranslateYAfter, out translateY) && float.TryParse(vm.TranslateZAfter, out translateZ))
                         {
                             Matrix4 translate = Matrix4.CreateTranslation(translateX, translateY, translateZ);
-                            loadedModel.UserTransform.TranslateMatrix = translate;
+                            loadedModel.UserTransform.TranslateAfterMatrix = translate;
+                        }
+                    }
+                    break;
+                case "TranslateXBefore":
+                case "TranslateYBefore":
+                case "TranslateZBefore":
+                    if (loadedModel != null)
+                    {
+                        float translateX, translateY, translateZ;
+                        if (float.TryParse(vm.TranslateXBefore, out translateX) && float.TryParse(vm.TranslateYBefore, out translateY) && float.TryParse(vm.TranslateZBefore, out translateZ))
+                        {
+                            Matrix4 translate = Matrix4.CreateTranslation(translateX, translateY, translateZ);
+                            loadedModel.UserTransform.TranslateBeforeMatrix = translate;
                         }
                     }
                     break;
@@ -135,28 +148,8 @@ namespace _3dModelViewer
             LoadedModel model = LoadModelOfd();
             if (model != null)
             {
-                Matrix4 modelTransform = Matrix4.Identity;
-                modelTransform = Matrix4.CreateTranslation(new Vector3(0f, -1.4f, 0f)) * modelTransform;
-                modelTransform = Matrix4.CreateScale(0.2f) * modelTransform;
-                //modelTransform = Matrix4.CreateRotationX((float)Math.PI/2) * modelTransform;
-                //modelTransform = Matrix4.CreateRotationY((float)Math.PI / 2) * modelTransform;
-                modelTransform.Transpose();
-                model.ApplyTransform(modelTransform);
+                loadedModel = model;
                 scene.LoadedModels.Add(model);
-            }
-            loadedModel = model;
-        }
-
-        private LoadedModel LoadModelFromFile(string name)
-        {
-            string dirName = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Models");
-            string fileName = Path.Combine(dirName, name);
-
-            using(Assimp.AssimpContext importer = new Assimp.AssimpContext())
-            {
-                importer.SetConfig(new NormalSmoothingAngleConfig(66.0f));
-                Assimp.Scene model = importer.ImportFile(fileName, Assimp.PostProcessPreset.TargetRealTimeMaximumQuality);
-                return new LoadedModel(model, dirName);
             }
         }
 
@@ -205,6 +198,32 @@ namespace _3dModelViewer
                     mt.RotationMatrixList.Pop();
                 mt.OnTheFlyRotation = Matrix4.Identity;
                 viewModel.RotationAngle = 0;
+            }
+        }
+        private void AutoCenterButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (loadedModel != null)
+            {
+                //scale adjusting
+                float maxSize = 3;
+                Vector3 delta = loadedModel.MaximumPosition - loadedModel.MinimumPosition;
+                float maxDelta = delta.X;
+                if (delta.Y > maxDelta)
+                    maxDelta = delta.Y;
+                if (delta.Z > maxDelta)
+                    maxDelta = delta.Z;
+                float scale = maxSize / maxDelta;
+                Matrix4 scaleMatrix = Matrix4.CreateScale(scale);
+                loadedModel.UserTransform.ScaleMatrix = scaleMatrix;
+                viewModel.ScaleFactor = scale.ToString("N8");
+                //centering
+                Vector3 centerOffset = (loadedModel.MaximumPosition + loadedModel.MinimumPosition) / 2;
+                centerOffset = new Vector3(scaleMatrix*(new Vector4(centerOffset,1f)));
+                Matrix4 translateBeforeMatrix = Matrix4.CreateTranslation(-centerOffset.X, -centerOffset.Y, -centerOffset.Z);
+                loadedModel.UserTransform.TranslateBeforeMatrix = translateBeforeMatrix;
+                viewModel.TranslateXBefore = (-centerOffset.X).ToString("N4");
+                viewModel.TranslateYBefore = (-centerOffset.Y).ToString("N4");
+                viewModel.TranslateZBefore = (-centerOffset.Z).ToString("N4");
             }
         }
 

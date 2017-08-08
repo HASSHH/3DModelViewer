@@ -12,9 +12,12 @@ namespace _3dModelViewer
         private RotationAxisValues rotationAxis;
         private double rotationAngle;
         private string scaleFactor;
-        private string translateX;
-        private string translateY;
-        private string translateZ;
+        private string translateXAfter;
+        private string translateYAfter;
+        private string translateZAfter;
+        private string translateXBefore;
+        private string translateYBefore;
+        private string translateZBefore;
 
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -48,33 +51,63 @@ namespace _3dModelViewer
             }
         }
 
-        public string TranslateX
+        public string TranslateXAfter
         {
-            get => translateX;
+            get => translateXAfter;
             set
             {
-                translateX = value;
-                OnPropertyChanged("TranslateX");
+                translateXAfter = value;
+                OnPropertyChanged("TranslateXAfter");
             }
         }
 
-        public string TranslateY
+        public string TranslateYAfter
         {
-            get => translateY;
+            get => translateYAfter;
             set
             {
-                translateY = value;
-                OnPropertyChanged("TranslateY");
+                translateYAfter = value;
+                OnPropertyChanged("TranslateYAfter");
             }
         }
 
-        public string TranslateZ
+        public string TranslateZAfter
         {
-            get => translateZ;
+            get => translateZAfter;
             set
             {
-                translateZ = value;
-                OnPropertyChanged("TranslateZ");
+                translateZAfter = value;
+                OnPropertyChanged("TranslateZAfter");
+            }
+        }
+
+        public string TranslateXBefore
+        {
+            get => translateXBefore;
+            set
+            {
+                translateXBefore = value;
+                OnPropertyChanged("TranslateXBefore");
+            }
+        }
+
+        public string TranslateYBefore
+        {
+            get => translateYBefore;
+            set
+            {
+                translateYBefore = value;
+                OnPropertyChanged("TranslateYBefore");
+            }
+        }
+
+        public string TranslateZBefore
+        {
+            get => translateZBefore;
+            set
+            {
+                translateZBefore = value;
+                OnPropertyChanged("TranslateZBefore");
             }
         }
 

@@ -86,6 +86,7 @@
     <Compile Include="EnumBooleanConverter.cs" />
     <Compile Include="Graphics\AssimpToOpenTKConverter.cs" />
     <Compile Include="Graphics\AttributeIndex.cs" />
+    <Compile Include="Graphics\Camera.cs" />
     <Compile Include="Graphics\Light.cs" />
     <Compile Include="Graphics\LoadedMaterial.cs" />
     <Compile Include="Graphics\LoadedModel.cs" />

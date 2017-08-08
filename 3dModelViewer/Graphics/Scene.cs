@@ -13,46 +13,88 @@ namespace _3dModelViewer.Graphics
         public readonly List<LoadedModel> LoadedModels = new List<LoadedModel>();
 
         private int shaderProgramHandle;
-        private Matrix4 projectionMatrix;
-        private Matrix4 viewMatrix;
-        private Matrix4 vpMatrix;
+        private Light light;
+        private Camera camera;
 
-        private float aspectRatio;
-        private Vector3 lookAt;
-        private Vector3 cameraPosition;
-        private Vector3 cameraUp;
-        private float cameraFovY;
-
-        public Scene()
+        public Light Light
         {
-            //setup camera values
-            cameraUp = Vector3.UnitY;
-            cameraFovY = 45;//degrees
-            cameraPosition = new Vector3(0.5f, 2f, 5f);
-            lookAt = new Vector3(0f, 0f, 0f);
-            Light = new Light
+            get => light;
+            set
             {
-                Position = new Vector3(2f, 1f, 3f),
-                Color = new Vector4(1f, 1f, 1f, 1f),
-                Attenuation = 0.0001f
-            };
+                if (value != null)
+                {
+                    if (light != null)
+                        light.Active = false;
+                    light = value;
+                    //apply light
+                    if (shaderProgramHandle > 0)
+                    {
+                        Vector3 lightPos = Light.Position;
+                        Vector4 lightColor = Light.Color;
+                        GL.Uniform3(GL.GetUniformLocation(shaderProgramHandle, "light.position"), ref lightPos);
+                        GL.Uniform4(GL.GetUniformLocation(shaderProgramHandle, "light.color"), ref lightColor);
+                        GL.Uniform1(GL.GetUniformLocation(shaderProgramHandle, "light.attenuation"), Light.Attenuation);
+                        light.PropertyChanged += (s, e) =>
+                        {
+                            switch (e.PropertyName)
+                            {
+                                case "Position":
+                                    Vector3 lp = light.Position;
+                                    GL.Uniform3(GL.GetUniformLocation(shaderProgramHandle, "light.position"), ref lp);
+                                    break;
+                                case "Color":
+                                    Vector4 lc = light.Color;
+                                    GL.Uniform4(GL.GetUniformLocation(shaderProgramHandle, "light.color"), ref lc);
+                                    break;
+                                case "Attenuation":
+                                    GL.Uniform1(GL.GetUniformLocation(shaderProgramHandle, "light.attenuation"), light.Attenuation);
+                                    break;
+                                default: break;
+                            }
+                        };
+                    }
+                }
+            }
         }
-
-        public Light Light { get; set; }
+        public Camera Camera
+        {
+            get => camera;
+            set
+            {
+                if (value != null)
+                {
+                    if (camera != null)
+                    {
+                        value.AspectRatio = camera.AspectRatio;
+                        camera.Active = false;
+                    }
+                    camera = value;
+                    if (shaderProgramHandle > 0)
+                    {
+                        Matrix4 vpMatrix = Camera.ViewProjectionMatrix;
+                        Vector3 cameraPosition = Camera.Position;
+                        GL.Uniform3(GL.GetUniformLocation(shaderProgramHandle, "cameraPos"), ref cameraPosition);
+                        GL.UniformMatrix4(GL.GetUniformLocation(shaderProgramHandle, "vpMatrix"), false, ref vpMatrix);
+                        camera.PropertyChanged += (s, e) =>
+                        {
+                            Matrix4 vp = Camera.ViewProjectionMatrix;
+                            Vector3 cp = Camera.Position;
+                            GL.Uniform3(GL.GetUniformLocation(shaderProgramHandle, "cameraPos"), ref cp);
+                            GL.UniformMatrix4(GL.GetUniformLocation(shaderProgramHandle, "vpMatrix"), false, ref vp);
+                        };
+                    }
+                }
+            }
+        }
 
         public void Draw()
         {
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
             GL.UseProgram(shaderProgramHandle);
-            //TO DO mode where camera is being initiated
-            GL.Uniform3(GL.GetUniformLocation(shaderProgramHandle, "cameraPos"), ref cameraPosition);
-            GL.UniformMatrix4(GL.GetUniformLocation(shaderProgramHandle, "vpMatrix"), false, ref vpMatrix);
-            //calculate pv matrix
-            vpMatrix = viewMatrix * projectionMatrix;
             //render objects
             RenderScene();
         }
-        
+
         private void RenderScene()
         {
             foreach (LoadedModel model in LoadedModels)
@@ -165,34 +207,27 @@ void main(void){
 
             GL.Enable(EnableCap.DepthTest);
             GL.ClearColor(0.7f, 0.7f, 0.9f, 1f);
-            //create pvm matrixes
-            Resize(width, height);//this creates the projection matrix
-            CreateViewMatrix();
 
-            //apply light
-            Vector3 lightPos = Light.Position;
-            Vector4 lightColor = Light.Color;
-            GL.Uniform3(GL.GetUniformLocation(shaderProgramHandle, "light.position"), ref lightPos);
-            GL.Uniform4(GL.GetUniformLocation(shaderProgramHandle, "light.color"), ref lightColor);
-            GL.Uniform1(GL.GetUniformLocation(shaderProgramHandle, "light.attenuation"), Light.Attenuation);
+            InitializeCameraAndLight();
+            Resize(width, height);
+        }
+
+        private void InitializeCameraAndLight()
+        {
+            Camera = new Camera(new Vector3(0.5f, 2f, 5f), new Vector3(0f, 0f, 0f));
+            Light = new Light
+            {
+                Position = new Vector3(2f, 1f, 3f),
+                Color = new Vector4(1f, 1f, 1f, 1f),
+                Attenuation = 0.0001f
+            };
         }
 
         public void Resize(double width, double height)
         {
             GL.Viewport(0, 0, (int)width, (int)height);
-            aspectRatio = (float)(width / height);
-            CreateProjectionMatrix();
-        }
-
-        private void CreateProjectionMatrix()
-        {
-            float fovRads = (float)(cameraFovY / 180 * Math.PI);
-            projectionMatrix = Matrix4.CreatePerspectiveFieldOfView(fovRads, aspectRatio, 0.1f, 20f);
-        }
-
-        private void CreateViewMatrix()
-        {
-            viewMatrix = Matrix4.LookAt(cameraPosition, lookAt, cameraUp);
+            if(Camera != null)
+                Camera.AspectRatio = (float)(width / height);
         }
     }
 }

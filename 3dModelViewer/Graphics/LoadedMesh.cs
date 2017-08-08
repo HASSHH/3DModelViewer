@@ -11,6 +11,9 @@ namespace _3dModelViewer.Graphics
 {
     public class LoadedMesh
     {
+        public Vector3 MinimumPosition;
+        public Vector3 MaximumPosition;
+
         private int eboHandler;
         private int positionVboHandler;
         private int uvVboHandler;
@@ -28,9 +31,28 @@ namespace _3dModelViewer.Graphics
             materialIndex = source.MaterialIndex;
 
             //positions
+            MinimumPosition = new Vector3(float.MaxValue, float.MaxValue, float.MaxValue);
+            MaximumPosition = new Vector3(float.MinValue, float.MinValue, float.MinValue);
             positions = new Vector3[source.VertexCount];
             for (int i = 0; i < source.VertexCount; ++i)
+            {
                 positions[i] = AssimpToOpenTKConverter.Vector3DToVector3(source.Vertices[i]);
+
+                if (positions[i].X < MinimumPosition.X)
+                    MinimumPosition.X = positions[i].X;
+                if (positions[i].Y < MinimumPosition.Y)
+                    MinimumPosition.Y = positions[i].Y;
+                if (positions[i].Z < MinimumPosition.Z)
+                    MinimumPosition.Z = positions[i].Z;
+
+                if (positions[i].X > MaximumPosition.X)
+                    MaximumPosition.X = positions[i].X;
+                if (positions[i].Y > MaximumPosition.Y)
+                    MaximumPosition.Y = positions[i].Y;
+                if (positions[i].Z > MaximumPosition.Z)
+                    MaximumPosition.Z = positions[i].Z;
+
+            }
             HasPositions = true;
 
             //normals

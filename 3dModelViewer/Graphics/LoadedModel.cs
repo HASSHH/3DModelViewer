@@ -13,12 +13,17 @@ namespace _3dModelViewer.Graphics
     {
         public readonly List<LoadedMesh> Meshes = new List<LoadedMesh>();
         public readonly List<LoadedMaterial> Materials = new List<LoadedMaterial>();
+        public Vector3 MinimumPosition;
+        public Vector3 MaximumPosition;
 
         private LoadedNode rootNode;
 
         public LoadedModel(Assimp.Scene source, string dirName)
         {
+            MinimumPosition = new Vector3(float.MaxValue, float.MaxValue, float.MaxValue);
+            MaximumPosition = new Vector3(float.MinValue, float.MinValue, float.MinValue);
             UserTransform = new ModelTransform();
+
             for (int i = 0; i < source.MeshCount; ++i)
                 Meshes.Add(new LoadedMesh(source.Meshes[i]));
             for (int i = 0; i < source.MaterialCount; ++i)
@@ -34,11 +39,6 @@ namespace _3dModelViewer.Graphics
             DrawNode(rootNode, shaderProgram);
         }
 
-        public void ApplyTransform(Matrix4 transformMatrix)
-        {
-            rootNode.Transform = transformMatrix * rootNode.Transform;
-        }
-
         private void DrawNode(LoadedNode node, int shaderProgram)
         {
             LoadedNode tempNode = node;
@@ -48,19 +48,17 @@ namespace _3dModelViewer.Graphics
                 transform = tempNode.Transform * transform;
                 tempNode = tempNode.Parent;
             } while (tempNode != null);
-            Matrix4 userTransform = UserTransform.ScaleMatrix * UserTransform.RotationMatrix * UserTransform.TranslateMatrix;
+            Matrix4 userTransform = UserTransform.ScaleMatrix * UserTransform.TranslateBeforeMatrix * UserTransform.RotationMatrix * UserTransform.TranslateAfterMatrix;
             userTransform.Transpose();
             transform = userTransform * transform;
-            transform.Transpose();
 
             foreach (VaoDescription desc in node.Meshes)
             {
                 LoadedMesh mesh = Meshes[desc.CorrespondingMeshIndex];
                 if (mesh.MaterialIndex >= 0 && mesh.MaterialIndex < Materials.Count)
                     Materials[mesh.MaterialIndex].Apply(shaderProgram);
-                GL.UniformMatrix4(GL.GetUniformLocation(shaderProgram, "modelMatrix"), false, ref transform);
+                GL.UniformMatrix4(GL.GetUniformLocation(shaderProgram, "modelMatrix"), true, ref transform);
                 Matrix3 normalMatrix = (new Matrix3(transform)).Inverted();
-                normalMatrix.Transpose();
                 GL.UniformMatrix3(GL.GetUniformLocation(shaderProgram, "normalMatrix"), false, ref normalMatrix);
                 GL.BindVertexArray(desc.VaoHandler);
                 GL.DrawElements(OpenTK.Graphics.OpenGL.PrimitiveType.Triangles, mesh.IndicesCount, DrawElementsType.UnsignedInt, IntPtr.Zero);
@@ -76,16 +74,46 @@ namespace _3dModelViewer.Graphics
             result.Transform = AssimpToOpenTKConverter.Matrix4x4ToMatrix4(node.Transform);
             result.Parent = parent;
             if (node.HasMeshes)
+            {
                 foreach (int meshIndex in node.MeshIndices)
                 {
                     int vaoHandler;
-                    CreateVao(Meshes[meshIndex], out vaoHandler);
+                    LoadedMesh mesh = Meshes[meshIndex];
+                    CreateVao(mesh, out vaoHandler);
                     result.Meshes.Add(new VaoDescription
                     {
                         VaoHandler = vaoHandler,
                         CorrespondingMeshIndex = meshIndex
                     });
                 }
+                //complete transform matrix used for finding min max pos
+                LoadedNode tempNode = result;
+                Matrix4 transform = Matrix4.Identity;
+                do
+                {
+                    transform = tempNode.Transform * transform;
+                    tempNode = tempNode.Parent;
+                } while (tempNode != null);
+                foreach(var mvao in result.Meshes)
+                {
+                    LoadedMesh mesh = Meshes[mvao.CorrespondingMeshIndex];
+                    Vector3 meshMin = new Vector3(new Vector4(mesh.MinimumPosition, 1f) * transform);
+                    Vector3 meshMax = new Vector3(new Vector4(mesh.MaximumPosition, 1f) * transform);
+
+                    if (meshMin.X < MinimumPosition.X)
+                        MinimumPosition.X = meshMin.X;
+                    if (meshMin.Y < MinimumPosition.Y)
+                        MinimumPosition.Y = meshMin.Y;
+                    if (meshMin.Z < MinimumPosition.Z)
+                        MinimumPosition.Z = meshMin.Z;
+                    if (meshMin.X > MaximumPosition.X)
+                        MaximumPosition.X = meshMin.X;
+                    if (meshMin.Y > MaximumPosition.Y)
+                        MaximumPosition.Y = meshMin.Y;
+                    if (meshMin.Z > MaximumPosition.Z)
+                        MaximumPosition.Z = meshMin.Z;
+                }
+            }
             if (node.HasChildren)
                 foreach (Node child in node.Children)
                 {
@@ -137,7 +165,8 @@ namespace _3dModelViewer.Graphics
 
         public class ModelTransform
         {
-            private Matrix4 translateMatrix = Matrix4.Identity;
+            private Matrix4 translateAfterMatrix = Matrix4.Identity;
+            private Matrix4 translateBeforeMatrix = Matrix4.Identity;
             private Matrix4 scaleMatrix = Matrix4.Identity;
             private Matrix4 onTheFlyRotation = Matrix4.Identity;
 
@@ -153,7 +182,8 @@ namespace _3dModelViewer.Graphics
                     return rotationMatrix;
                 }
             }
-            public Matrix4 TranslateMatrix { get => translateMatrix; set => translateMatrix = value; }
+            public Matrix4 TranslateAfterMatrix { get => translateAfterMatrix; set => translateAfterMatrix = value; }
+            public Matrix4 TranslateBeforeMatrix { get => translateBeforeMatrix; set => translateBeforeMatrix = value; }
             public Matrix4 ScaleMatrix { get => scaleMatrix; set => scaleMatrix = value; }
             public Matrix4 OnTheFlyRotation { get => onTheFlyRotation; set => onTheFlyRotation = value; }
         }
