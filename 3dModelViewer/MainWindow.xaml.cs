@@ -100,6 +100,63 @@ namespace _3dModelViewer
                         }
                     }
                     break;
+                case "LightColor":
+                    if(scene != null)
+                    {
+                        Color color = viewModel.LightColor;
+                        scene.Light.Color = new Vector4(color.ScR, color.ScG, color.ScB, color.ScA);
+                    }
+                    break;
+                case "LightAttenuation":
+                    if (scene != null)
+                        scene.Light.Attenuation = (float)viewModel.LightAttenuation;
+                    break;
+                case "LightPosX":
+                case "LightPosY":
+                case "LightPosZ":
+                    if (scene != null)
+                    {
+                        float posx, posy, posz;
+                        if(float.TryParse(viewModel.LightPosX, out posx) && float.TryParse(viewModel.LightPosY, out posy) && float.TryParse(viewModel.LightPosZ, out posz))
+                            scene.Light.Position = new Vector3(posx, posy, posz);
+                    }
+                    break;
+                case "CameraPosX":
+                case "CameraPosY":
+                case "CameraPosZ":
+                    if (scene != null)
+                    {
+                        float posx, posy, posz;
+                        if (float.TryParse(viewModel.CameraPosX, out posx) && float.TryParse(viewModel.CameraPosY, out posy) && float.TryParse(viewModel.CameraPosZ, out posz))
+                            scene.Camera.Position = new Vector3(posx, posy, posz);
+                    }
+                    break;
+                case "CameraLookAtX":
+                case "CameraLookAtY":
+                case "CameraLookAtZ":
+                    if (scene != null)
+                    {
+                        float posx, posy, posz;
+                        if (float.TryParse(viewModel.CameraLookAtX, out posx) && float.TryParse(viewModel.CameraLookAtY, out posy) && float.TryParse(viewModel.CameraLookAtZ, out posz))
+                            scene.Camera.LookAt = new Vector3(posx, posy, posz);
+                    }
+                    break;
+                case "FloorEnabled":
+                    if (scene != null)
+                        scene.DrawFloorEnabled = viewModel.FloorEnabled;
+                    break;
+                case "FloorColor":
+                    if (scene != null)
+                        scene.Floor.SetColor(viewModel.FloorColor);
+                    break;
+                case "FloorElevation":
+                    if (scene != null)
+                    {
+                        double elevation;
+                        if (double.TryParse(viewModel.FloorElevation, out elevation))
+                            scene.Floor.SetHeight(elevation);
+                    }
+                    break;
                 default: break;
             }
         }
@@ -232,13 +289,23 @@ namespace _3dModelViewer
             (sender as System.Windows.Controls.TextBox).GetBindingExpression(System.Windows.Controls.TextBox.TextProperty).UpdateSource();
         }
 
-        private void Rectangle_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        private void LightColorRectangle_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
         {
             ChooseColorWindow ccw = new ChooseColorWindow();
             if (ccw.ShowDialog().GetValueOrDefault())
             {
                 Color color = (ccw.DataContext as ChooseColorViewModel).GetColor();
-                (sender as System.Windows.Shapes.Rectangle).Fill = new SolidColorBrush(color);
+                viewModel.LightColor = color;
+            }
+        }
+
+        private void FloorColorRectangle_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            ChooseColorWindow ccw = new ChooseColorWindow();
+            if (ccw.ShowDialog().GetValueOrDefault())
+            {
+                Color color = (ccw.DataContext as ChooseColorViewModel).GetColor();
+                viewModel.FloorColor = color;
             }
         }
     }

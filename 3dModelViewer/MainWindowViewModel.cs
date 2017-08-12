@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Media;
 
 namespace _3dModelViewer
 {
@@ -18,9 +19,24 @@ namespace _3dModelViewer
         private string translateXBefore;
         private string translateYBefore;
         private string translateZBefore;
+        private Color lightColor;
+        private double lightAttenuation;
+        private string lightPosX;
+        private string lightPosY;
+        private string lightPosZ;
+        private string cameraPosX;
+        private string cameraPosY;
+        private string cameraPosZ;
+        private string cameraLookAtX;
+        private string cameraLookAtY;
+        private string cameraLookAtZ;
+        private Color floorColor;
+        private string floorElevation;
+        private bool floorEnabled;
 
         public event PropertyChangedEventHandler PropertyChanged;
 
+        //rotation
         public RotationAxisValues RotationAxis
         {
             get => rotationAxis;
@@ -30,7 +46,6 @@ namespace _3dModelViewer
                 OnPropertyChanged("RotationAxis");
             }
         }
-
         public double RotationAngle
         {
             get => rotationAngle;
@@ -41,6 +56,7 @@ namespace _3dModelViewer
             }
         }
 
+        //scale
         public string ScaleFactor
         {
             get => scaleFactor;
@@ -51,6 +67,7 @@ namespace _3dModelViewer
             }
         }
 
+        //translations
         public string TranslateXAfter
         {
             get => translateXAfter;
@@ -60,7 +77,6 @@ namespace _3dModelViewer
                 OnPropertyChanged("TranslateXAfter");
             }
         }
-
         public string TranslateYAfter
         {
             get => translateYAfter;
@@ -70,7 +86,6 @@ namespace _3dModelViewer
                 OnPropertyChanged("TranslateYAfter");
             }
         }
-
         public string TranslateZAfter
         {
             get => translateZAfter;
@@ -80,7 +95,6 @@ namespace _3dModelViewer
                 OnPropertyChanged("TranslateZAfter");
             }
         }
-
         public string TranslateXBefore
         {
             get => translateXBefore;
@@ -90,7 +104,6 @@ namespace _3dModelViewer
                 OnPropertyChanged("TranslateXBefore");
             }
         }
-
         public string TranslateYBefore
         {
             get => translateYBefore;
@@ -100,7 +113,6 @@ namespace _3dModelViewer
                 OnPropertyChanged("TranslateYBefore");
             }
         }
-
         public string TranslateZBefore
         {
             get => translateZBefore;
@@ -110,6 +122,39 @@ namespace _3dModelViewer
                 OnPropertyChanged("TranslateZBefore");
             }
         }
+
+        //light
+        public Color LightColor { get => lightColor; set { lightColor = value; OnPropertyChanged("LightColor"); } }
+        public double LightAttenuation
+        {
+            get => lightAttenuation;
+            set
+            {
+                if (value < 0)
+                    lightAttenuation = 0;
+                else if (value > 1)
+                    lightAttenuation = 1;
+                else
+                    lightAttenuation = value;
+                OnPropertyChanged("LightAttenuation");
+            }
+        }
+        public string LightPosX { get => lightPosX; set { lightPosX = value; OnPropertyChanged("LightPosX"); } }
+        public string LightPosY { get => lightPosY; set { lightPosY = value; OnPropertyChanged("LightPosY"); } }
+        public string LightPosZ { get => lightPosZ; set { lightPosZ = value; OnPropertyChanged("LightPosZ"); } }
+
+        //camera
+        public string CameraPosX { get => cameraPosX; set { cameraPosX = value; OnPropertyChanged("CameraPosX"); } }
+        public string CameraPosY { get => cameraPosY; set { cameraPosY = value; OnPropertyChanged("CameraPosY"); } }
+        public string CameraPosZ { get => cameraPosZ; set { cameraPosZ = value; OnPropertyChanged("CameraPosZ"); } }
+        public string CameraLookAtX { get => cameraLookAtX; set { cameraLookAtX = value; OnPropertyChanged("CameraLookAtX"); } }
+        public string CameraLookAtY { get => cameraLookAtY; set { cameraLookAtY = value; OnPropertyChanged("CameraLookAtY"); } }
+        public string CameraLookAtZ { get => cameraLookAtZ; set { cameraLookAtZ = value; OnPropertyChanged("CameraLookAtZ"); } }
+
+        //floor
+        public Color FloorColor { get => floorColor; set { floorColor = value; OnPropertyChanged("FloorColor"); } }
+        public bool FloorEnabled { get => floorEnabled; set { floorEnabled = value; OnPropertyChanged("FloorEnabled"); } }
+        public string FloorElevation { get => floorElevation; set { floorElevation = value; OnPropertyChanged("FloorElevation"); } }
 
         private void OnPropertyChanged(string propertyName)
         {

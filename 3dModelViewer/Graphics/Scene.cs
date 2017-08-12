@@ -2,7 +2,10 @@
 using OpenTK.Graphics.OpenGL;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
+using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -10,12 +13,22 @@ namespace _3dModelViewer.Graphics
 {
     public class Scene
     {
+        const int depthTextureSize = 4096;
+
         public readonly List<LoadedModel> LoadedModels = new List<LoadedModel>();
+        public readonly Floor Floor = new Floor();
 
         private int shaderProgramHandle;
         private Light light;
         private Camera camera;
+        private int depthProgramHandle;
+        private int depthFBO;
+        private int depthTexture;
+        private int viewPortWidth;
+        private int viewPortHeight;
+        private Matrix4 depthVP;
 
+        public bool DrawFloorEnabled { get; set; }
         public Light Light
         {
             get => light;
@@ -89,94 +102,33 @@ namespace _3dModelViewer.Graphics
 
         public void Draw()
         {
-            GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
-            GL.UseProgram(shaderProgramHandle);
-            //render objects
-            RenderScene();
-        }
+            //render shadow map
+            if (depthProgramHandle > 0)
+                RenderShadowMap();
 
-        private void RenderScene()
-        {
-            foreach (LoadedModel model in LoadedModels)
-                model.Draw(shaderProgramHandle);
+
+            if(shaderProgramHandle > 0)
+            {
+                GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
+                GL.Viewport(0, 0, viewPortWidth, viewPortHeight);
+                GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+                GL.UseProgram(shaderProgramHandle);
+
+                GL.UniformMatrix4(GL.GetUniformLocation(shaderProgramHandle, "depthVP"), false, ref depthVP);
+                GL.ActiveTexture(TextureUnit.Texture3);
+                GL.BindTexture(TextureTarget.Texture2D, depthTexture);
+                //render objects
+                RenderScene(shaderProgramHandle);
+            }
         }
 
         public void Init(double width, double height)
         {
-            string vertexShaderSource = @"
-#version 330
-
-in vec4 inPosition;
-in vec3 inNormal;
-in vec2 inUvCoord;
-uniform mat4 vpMatrix;
-uniform mat4 modelMatrix;
-out vec2 passUvCoord;
-out vec3 passNormal;
-out vec3 passPosition;
-
-void main(void){
-    gl_Position = vpMatrix * modelMatrix * inPosition;
-    passUvCoord = inUvCoord;
-    passNormal = inNormal;
-    passPosition = vec3(modelMatrix*inPosition);
-}";
-            string fragmentShaderSource = @"
-#version 330
-
-struct Material{
-    vec4 diffuse;
-    vec4 ambient;
-    vec4 specular;
-    float shininess;
-};
-struct Light{
-    vec3 position;
-    vec4 color;
-    float attenuation;
-};
-
-in vec2 passUvCoord;
-in vec3 passNormal;
-in vec3 passPosition;
-uniform mat3 normalMatrix;
-uniform vec3 cameraPos;
-uniform float hasTextureNormal;
-uniform Material material;
-uniform Light light;
-uniform sampler2D textureDiffuse;
-uniform sampler2D textureNormal;
-uniform sampler2D textureSpecular;
-out vec4 fragColor;
-
-void main(void){
-    vec4 surfaceColor = material.diffuse + texture(textureDiffuse, passUvCoord);
-    vec3 normal = normalMatrix*passNormal;
-    if(hasTextureNormal > 0.0)
-        normal = normal * (2.0*texture(textureNormal, passUvCoord).rgb - 1.0);
-    
-    //ambient
-    vec4 ambient = light.color*material.ambient;
-    //diffuse
-    vec3 norm = normalize(normal);
-    vec3 lightDir = normalize(light.position - passPosition); 
-    float diff = max(dot(norm, lightDir), 0.0);
-    vec4 diffuse = diff*surfaceColor*light.color;
-    // specular
-    vec3 viewDir = normalize(cameraPos - passPosition);
-    vec3 reflectDir = reflect(-lightDir, norm);  
-    float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
-    vec4 specular = spec * (material.specular + texture(textureSpecular, passUvCoord)) * light.color;
-    //attenuation
-    float distanceToLight = length(light.position - passPosition);
-    float attenuation = 1.0/(1.0 + light.attenuation*pow(distanceToLight, 2));
-    //gamma correction
-    vec3 linearColor = vec3(ambient + attenuation*(diffuse + specular));
-    vec3 gamma = vec3(1.0/2.2);
-    //fragColor = vec4(pow(linearColor, gamma), surfaceColor.a);
-    fragColor = ambient + attenuation*(diffuse + specular);
-    //fragColor = specular;
-}";
+            ///////////////////
+            /// DEPTH SHADER///
+            ///////////////////
+            string vertexShaderSource = ReadShaderString("DepthShader.vert");
+            string fragmentShaderSource = ReadShaderString("DepthShader.frag");
             //create shaders
             int vertexShaderHandle = GL.CreateShader(ShaderType.VertexShader);
             GL.ShaderSource(vertexShaderHandle, vertexShaderSource);
@@ -185,6 +137,30 @@ void main(void){
             GL.ShaderSource(fragmentShaderHandle, fragmentShaderSource);
             GL.CompileShader(fragmentShaderHandle);
 
+            //create shader program
+            depthProgramHandle = GL.CreateProgram();
+            //attach shaders
+            GL.AttachShader(depthProgramHandle, vertexShaderHandle);
+            GL.AttachShader(depthProgramHandle, fragmentShaderHandle);
+            //bind attr locations
+            GL.BindAttribLocation(depthProgramHandle, (int)AttributeIndex.PositionAttrIndex, "inPosition");
+            //link
+            GL.LinkProgram(depthProgramHandle);
+
+            ///////////////////
+            /// MAIN SHADER ///
+            ///////////////////
+            vertexShaderSource = ReadShaderString("MainShader.vert");
+            fragmentShaderSource = ReadShaderString("MainShader.frag");
+            //create shaders
+            vertexShaderHandle = GL.CreateShader(ShaderType.VertexShader);
+            GL.ShaderSource(vertexShaderHandle, vertexShaderSource);
+            GL.CompileShader(vertexShaderHandle);
+            fragmentShaderHandle = GL.CreateShader(ShaderType.FragmentShader);
+            GL.ShaderSource(fragmentShaderHandle, fragmentShaderSource);
+            GL.CompileShader(fragmentShaderHandle);
+
+            //debugging
             string vinfo = GL.GetShaderInfoLog(vertexShaderHandle);
             string finfo = GL.GetShaderInfoLog(fragmentShaderHandle);
 
@@ -204,30 +180,90 @@ void main(void){
             GL.Uniform1(GL.GetUniformLocation(shaderProgramHandle, "textureDiffuse"), 0);
             GL.Uniform1(GL.GetUniformLocation(shaderProgramHandle, "textureNormal"), 1);
             GL.Uniform1(GL.GetUniformLocation(shaderProgramHandle, "textureSpecular"), 2);
+            GL.Uniform1(GL.GetUniformLocation(shaderProgramHandle, "shadowMap"), 3);
 
             GL.Enable(EnableCap.DepthTest);
+            GL.Enable(EnableCap.CullFace);
             GL.ClearColor(0.7f, 0.7f, 0.9f, 1f);
 
             InitializeCameraAndLight();
             Resize(width, height);
         }
 
+        private void RenderShadowMap()
+        {
+            GL.UseProgram(depthProgramHandle);
+
+            if (depthFBO < 1)
+            {
+                //create fbo and texture
+                GL.GenFramebuffers(1, out depthFBO);
+                GL.BindFramebuffer(FramebufferTarget.Framebuffer, depthFBO);
+                GL.ActiveTexture(TextureUnit.Texture0);
+                GL.GenTextures(1, out depthTexture);
+                GL.BindTexture(TextureTarget.Texture2D, depthTexture);
+                GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.DepthComponent, depthTextureSize, depthTextureSize, 0, PixelFormat.DepthComponent, PixelType.Float, IntPtr.Zero);
+                GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Nearest);
+                GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Nearest);
+                GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.ClampToEdge);
+                GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.ClampToEdge);
+                GL.FramebufferTexture(FramebufferTarget.Framebuffer, FramebufferAttachment.DepthAttachment, depthTexture, 0);
+                GL.DrawBuffer(DrawBufferMode.None);
+                GL.ReadBuffer(ReadBufferMode.None);
+                if (GL.CheckFramebufferStatus(FramebufferTarget.Framebuffer) != FramebufferErrorCode.FramebufferComplete)
+                    return;
+            }
+
+            GL.CullFace(CullFaceMode.Front);
+            GL.BindFramebuffer(FramebufferTarget.Framebuffer, 1);
+            GL.Viewport(0, 0, depthTextureSize, depthTextureSize);
+            GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+            Vector3 lightLookAt = new Vector3(0, 0, 0);
+            Matrix4 depthP = Matrix4.CreatePerspectiveFieldOfView((float)Math.PI/4, 1f, 0.1f, 100f);
+            Matrix4 depthV = Matrix4.LookAt(Light.Position, lightLookAt, Vector3.UnitY);
+            depthVP = depthV * depthP;
+            GL.UniformMatrix4(GL.GetUniformLocation(depthProgramHandle, "depthVP"), false, ref depthVP);
+
+            RenderScene(depthProgramHandle);
+            GL.CullFace(CullFaceMode.Back);
+        }
+
+        public void Resize(double width, double height)
+        {
+            viewPortHeight = (int)height;
+            viewPortWidth = (int)width;
+            if (Camera != null)
+                Camera.AspectRatio = (float)(width / height);
+        }
+
+        private void RenderScene(int shaderProgram)
+        {
+            foreach (LoadedModel model in LoadedModels)
+                model.Draw(shaderProgram);
+            if (DrawFloorEnabled)
+                Floor.Draw(shaderProgram);
+        }
+
         private void InitializeCameraAndLight()
         {
-            Camera = new Camera(new Vector3(0.5f, 2f, 5f), new Vector3(0f, 0f, 0f));
+            Camera = new Camera(new Vector3(0f, 1f, 5f), new Vector3(0f, 0f, 0f));
             Light = new Light
             {
-                Position = new Vector3(2f, 1f, 3f),
+                Position = new Vector3(20f, 20f, 20f),
                 Color = new Vector4(1f, 1f, 1f, 1f),
                 Attenuation = 0.0001f
             };
         }
 
-        public void Resize(double width, double height)
+        private string ReadShaderString(string fileName)
         {
-            GL.Viewport(0, 0, (int)width, (int)height);
-            if(Camera != null)
-                Camera.AspectRatio = (float)(width / height);
+            using (Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("_3dModelViewer.Graphics.Shaders." + fileName))
+            {
+                using (StreamReader reader = new StreamReader(stream))
+                {
+                    return reader.ReadToEnd();
+                }
+            }
         }
     }
 }

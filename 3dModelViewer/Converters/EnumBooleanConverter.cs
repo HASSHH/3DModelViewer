@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Data;
 
-namespace _3dModelViewer
+namespace _3dModelViewer.Converters
 {
     public class EnumBooleanConverter : IValueConverter
     {

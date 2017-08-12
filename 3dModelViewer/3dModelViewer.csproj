@@ -83,10 +83,13 @@
     <Compile Include="ChooseColorWindow.xaml.cs">
       <DependentUpon>ChooseColorWindow.xaml</DependentUpon>
     </Compile>
-    <Compile Include="EnumBooleanConverter.cs" />
+    <Compile Include="Converters\ColorToBrushConverter.cs" />
+    <Compile Include="Converters\DoubleToStringConverter.cs" />
+    <Compile Include="Converters\EnumBooleanConverter.cs" />
     <Compile Include="Graphics\AssimpToOpenTKConverter.cs" />
     <Compile Include="Graphics\AttributeIndex.cs" />
     <Compile Include="Graphics\Camera.cs" />
+    <Compile Include="Graphics\Floor.cs" />
     <Compile Include="Graphics\Light.cs" />
     <Compile Include="Graphics\LoadedMaterial.cs" />
     <Compile Include="Graphics\LoadedModel.cs" />
@@ -117,6 +120,10 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
+    <EmbeddedResource Include="Graphics\Shaders\MainShader.frag" />
+    <EmbeddedResource Include="Graphics\Shaders\MainShader.vert" />
+    <EmbeddedResource Include="Graphics\Shaders\DepthShader.frag" />
+    <EmbeddedResource Include="Graphics\Shaders\DepthShader.vert" />
     <None Include="OpenTK.dll.config" />
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">

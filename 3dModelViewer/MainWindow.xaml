@@ -4,16 +4,23 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:_3dModelViewer"
+        xmlns:converters="clr-namespace:_3dModelViewer.Converters"
         mc:Ignorable="d"
         Title="3D Model Viewer" Height="700" Width="1000"
         Loaded="Window_Loaded">
     <Window.DataContext>
         <local:MainWindowViewModel RotationAngle="0" ScaleFactor="1" 
                                    TranslateXAfter="0" TranslateYAfter="0" TranslateZAfter="0"
-                                   TranslateXBefore="0" TranslateYBefore="0" TranslateZBefore="0"/>
+                                   TranslateXBefore="0" TranslateYBefore="0" TranslateZBefore="0"
+                                   LightColor="White" LightAttenuation="0.0001" LightPosX="20" LightPosY="20" LightPosZ="20"
+                                   CameraPosX="0" CameraPosY="1" CameraPosZ="5"
+                                   CameraLookAtX="0" CameraLookAtY="0" CameraLookAtZ="0"
+                                   FloorColor="Red" FloorElevation="0"/>
     </Window.DataContext>
     <Window.Resources>
-        <local:EnumBooleanConverter x:Key="EnumBooleanConverter"/>
+        <converters:EnumBooleanConverter x:Key="EnumBooleanConverter"/>
+        <converters:ColorToBrushConverter x:Key="ColorToBrushConverter"/>
+        <converters:DoubleToStringConverter x:Key="DoubleToStringConverter"/>
     </Window.Resources>
     <Grid>
         <Grid.ColumnDefinitions>
@@ -62,7 +69,6 @@
                         </Grid>
                         <Button Content="Apply" Click="ApplyRotationButton_Click"/>
                         <Button Content="Undo last rotation" Click="UndoRotationButton_Click"/>
-                        <Button Content="Clear all rotations"/>
                     </StackPanel>
                     <StackPanel Grid.Column="3" Style="{StaticResource ComponentStackPanel}">
                         <Label Content="Translation" Style="{StaticResource ComponentLabel}"/>
@@ -115,13 +121,106 @@
             <Grid.RowDefinitions>
                 <RowDefinition/>
                 <RowDefinition/>
+                <RowDefinition/>
             </Grid.RowDefinitions>
             <StackPanel Grid.Row="0" Style="{StaticResource ComponentStackPanel}">
                 <Label Content="Light" Style="{StaticResource ComponentLabel}"/>
-                <Rectangle Width="50" Height="50" Fill="Black" PreviewMouseLeftButtonUp="Rectangle_PreviewMouseLeftButtonUp"/>
+                <StackPanel Orientation="Horizontal" Margin="0, 10, 0, 0">
+                    <Label Content="Color: " Margin="0,0,20,0"/>
+                    <Border BorderBrush="Black" BorderThickness="2">
+                        <Rectangle Width="{Binding ActualHeight, RelativeSource={RelativeSource Self}}" Fill="{Binding LightColor, Converter={StaticResource ColorToBrushConverter}}" PreviewMouseLeftButtonUp="LightColorRectangle_PreviewMouseLeftButtonUp"/>
+                    </Border>
+                </StackPanel>
+                <Grid Margin="0, 10, 0, 0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <Label Grid.Column="0" Content="Attenuation: "/>
+                    <Slider Grid.Column="1" Value="{Binding LightAttenuation}" Minimum="0" Maximum="1" VerticalAlignment="Center" AutoToolTipPlacement="TopLeft" AutoToolTipPrecision="3"/>
+                    <TextBox Grid.Column="2" Width="50" Text="{Binding LightAttenuation, UpdateSourceTrigger=Explicit}" TextChanged="TextBox_TextChanged"/>
+                </Grid>
+                <Label Content="Position:" Margin="0,10,0,0"/>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition/>
+                        <ColumnDefinition/>
+                        <ColumnDefinition/>
+                    </Grid.ColumnDefinitions>
+                    <DockPanel Grid.Column="0">
+                        <Label DockPanel.Dock="Left" Content="X:"/>
+                        <TextBox Text="{Binding LightPosX, UpdateSourceTrigger=Explicit}" TextChanged="TextBox_TextChanged"/>
+                    </DockPanel>
+                    <DockPanel Grid.Column="1">
+                        <Label DockPanel.Dock="Left" Content="Y:"/>
+                        <TextBox Text="{Binding LightPosY, UpdateSourceTrigger=Explicit}" TextChanged="TextBox_TextChanged"/>
+                    </DockPanel>
+                    <DockPanel Grid.Column="2">
+                        <Label DockPanel.Dock="Left" Content="Z:"/>
+                        <TextBox Text="{Binding LightPosZ, UpdateSourceTrigger=Explicit}" TextChanged="TextBox_TextChanged"/>
+                    </DockPanel>
+                </Grid>
             </StackPanel>
             <StackPanel Grid.Row="1" Style="{StaticResource ComponentStackPanel}">
                 <Label Content="Camera" Style="{StaticResource ComponentLabel}"/>
+                <Label Content="Position: "/>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition/>
+                        <ColumnDefinition/>
+                        <ColumnDefinition/>
+                    </Grid.ColumnDefinitions>
+                    <DockPanel Grid.Column="0">
+                        <Label DockPanel.Dock="Left" Content="X:"/>
+                        <TextBox Text="{Binding CameraPosX, UpdateSourceTrigger=Explicit}" TextChanged="TextBox_TextChanged"/>
+                    </DockPanel>
+                    <DockPanel Grid.Column="1">
+                        <Label DockPanel.Dock="Left" Content="Y:"/>
+                        <TextBox Text="{Binding CameraPosY, UpdateSourceTrigger=Explicit}" TextChanged="TextBox_TextChanged"/>
+                    </DockPanel>
+                    <DockPanel Grid.Column="2">
+                        <Label DockPanel.Dock="Left" Content="Z:"/>
+                        <TextBox Text="{Binding CameraPosZ, UpdateSourceTrigger=Explicit}" TextChanged="TextBox_TextChanged"/>
+                    </DockPanel>
+                </Grid>
+                <Label Content="Look at: "/>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition/>
+                        <ColumnDefinition/>
+                        <ColumnDefinition/>
+                    </Grid.ColumnDefinitions>
+                    <DockPanel Grid.Column="0">
+                        <Label DockPanel.Dock="Left" Content="X:"/>
+                        <TextBox Text="{Binding CameraLookAtX, UpdateSourceTrigger=Explicit}" TextChanged="TextBox_TextChanged"/>
+                    </DockPanel>
+                    <DockPanel Grid.Column="1">
+                        <Label DockPanel.Dock="Left" Content="Y:"/>
+                        <TextBox Text="{Binding CameraLookAtY, UpdateSourceTrigger=Explicit}" TextChanged="TextBox_TextChanged"/>
+                    </DockPanel>
+                    <DockPanel Grid.Column="2">
+                        <Label DockPanel.Dock="Left" Content="Z:"/>
+                        <TextBox Text="{Binding CameraLookAtZ, UpdateSourceTrigger=Explicit}" TextChanged="TextBox_TextChanged"/>
+                    </DockPanel>
+                </Grid>
+            </StackPanel>
+            <StackPanel Grid.Row="2" Style="{StaticResource ComponentStackPanel}">
+                <Label Content="Floor" Style="{StaticResource ComponentLabel}"/>
+                <DockPanel>
+                    <Label DockPanel.Dock="Left" Content="Enable floor: " Margin="0,0,20,0"/>
+                    <CheckBox IsChecked="{Binding FloorEnabled}" VerticalAlignment="Center"/>
+                </DockPanel>
+                <StackPanel Orientation="Horizontal" Margin="0, 10, 0, 0">
+                    <Label Content="Color: " Margin="0,0,20,0"/>
+                    <Border BorderBrush="Black" BorderThickness="2">
+                        <Rectangle Width="{Binding ActualHeight, RelativeSource={RelativeSource Self}}" Fill="{Binding FloorColor, Converter={StaticResource ColorToBrushConverter}}" PreviewMouseLeftButtonUp="FloorColorRectangle_PreviewMouseLeftButtonUp"/>
+                    </Border>
+                </StackPanel>
+                <DockPanel Margin="0, 10, 0, 0">
+                    <Label DockPanel.Dock="Left" Content="Elevation: " Margin="0,0,20,0"/>
+                    <TextBox Text="{Binding FloorElevation, UpdateSourceTrigger=Explicit}" TextChanged="TextBox_TextChanged"/>
+                </DockPanel>
             </StackPanel>
         </Grid>
     </Grid>

@@ -106,12 +106,12 @@ namespace _3dModelViewer.Graphics
                         MinimumPosition.Y = meshMin.Y;
                     if (meshMin.Z < MinimumPosition.Z)
                         MinimumPosition.Z = meshMin.Z;
-                    if (meshMin.X > MaximumPosition.X)
-                        MaximumPosition.X = meshMin.X;
-                    if (meshMin.Y > MaximumPosition.Y)
-                        MaximumPosition.Y = meshMin.Y;
-                    if (meshMin.Z > MaximumPosition.Z)
-                        MaximumPosition.Z = meshMin.Z;
+                    if (meshMax.X > MaximumPosition.X)
+                        MaximumPosition.X = meshMax.X;
+                    if (meshMax.Y > MaximumPosition.Y)
+                        MaximumPosition.Y = meshMax.Y;
+                    if (meshMax.Z > MaximumPosition.Z)
+                        MaximumPosition.Z = meshMax.Z;
                 }
             }
             if (node.HasChildren)
