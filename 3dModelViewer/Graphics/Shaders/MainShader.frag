@@ -67,8 +67,9 @@ float GetAttenuation(){
 float GetVisibility(){
 	vec3 shadowUv = shadowCoord.xyz / shadowCoord.w;
 	shadowUv = (shadowUv + 1.0)/2.0;
+	float bias = max(0.00001 * (1.0 - dot(norm, lightDir)), 0.000001); 
 	float visibility = 1.0;
-	if(texture(shadowMap, shadowUv.xy).r < shadowUv.z)
+	if(texture(shadowMap, shadowUv.xy).r < shadowUv.z - bias)
 		visibility = 0.5;
 	return visibility;
 }

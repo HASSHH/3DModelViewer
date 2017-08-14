@@ -33,6 +33,7 @@ namespace _3dModelViewer.Graphics
 
         public LoadedNode RootNode { get => rootNode; }
         public ModelTransform UserTransform { get; private set; }
+        public string Name { get; set; }
 
         public void Draw(int shaderProgram)
         {
@@ -94,6 +95,7 @@ namespace _3dModelViewer.Graphics
                     transform = tempNode.Transform * transform;
                     tempNode = tempNode.Parent;
                 } while (tempNode != null);
+                transform.Transpose();
                 foreach(var mvao in result.Meshes)
                 {
                     LoadedMesh mesh = Meshes[mvao.CorrespondingMeshIndex];

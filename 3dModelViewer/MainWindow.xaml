@@ -6,8 +6,7 @@
         xmlns:local="clr-namespace:_3dModelViewer"
         xmlns:converters="clr-namespace:_3dModelViewer.Converters"
         mc:Ignorable="d"
-        Title="3D Model Viewer" Height="700" Width="1000"
-        Loaded="Window_Loaded">
+        Title="3D Model Viewer" Height="700" Width="1000">
     <Window.DataContext>
         <local:MainWindowViewModel RotationAngle="0" ScaleFactor="1" 
                                    TranslateXAfter="0" TranslateYAfter="0" TranslateZAfter="0"
@@ -36,10 +35,24 @@
             <Grid Grid.Row="1" >
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
                     <RowDefinition/>
                 </Grid.RowDefinitions>
-                <Label Grid.Row="0" Content="Model transform" HorizontalContentAlignment="Center"/>
-                <Grid Grid.Row="1">
+                <Grid Grid.Row="0" Margin="5">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <ComboBox Grid.Column="0" 
+                              ItemsSource="{Binding LoadedModels}" 
+                              SelectedValue="{Binding SelectedModel}"
+                              DisplayMemberPath="Name"/>
+                    <Button Grid.Column="1" Content="Remove model" Width="100" Margin="10, 0, 10, 0" Click="RemoveModelButton_Click"/>
+                    <Button Grid.Column="2" Content="Add model" Width="100" Click="AddModelButton_Click"/>
+                </Grid>
+                <Label Grid.Row="1" Content="Model transform" HorizontalContentAlignment="Center"/>
+                <Grid Grid.Row="2">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="231*"/>
                         <ColumnDefinition Width="173*"/>

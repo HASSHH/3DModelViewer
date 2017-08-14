@@ -1,5 +1,7 @@
-﻿using System;
+﻿using _3dModelViewer.Graphics;
+using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Text;
@@ -33,6 +35,9 @@ namespace _3dModelViewer
         private Color floorColor;
         private string floorElevation;
         private bool floorEnabled;
+        private readonly ObservableCollection<LoadedModel> loadedModels = new ObservableCollection<LoadedModel>();
+        private LoadedModel selectedModel;
+        private readonly Dictionary<LoadedModel, ModelTransform> modelTransforms = new Dictionary<LoadedModel, ModelTransform>();
 
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -156,9 +161,70 @@ namespace _3dModelViewer
         public bool FloorEnabled { get => floorEnabled; set { floorEnabled = value; OnPropertyChanged("FloorEnabled"); } }
         public string FloorElevation { get => floorElevation; set { floorElevation = value; OnPropertyChanged("FloorElevation"); } }
 
+        public ObservableCollection<LoadedModel> LoadedModels => loadedModels;
+        public LoadedModel SelectedModel { get => selectedModel; set { selectedModel = value; UpdateTransformValues(value); OnPropertyChanged("SelectedModel"); } }
+        public Dictionary<LoadedModel, ModelTransform> ModelTransforms => modelTransforms;
+
         private void OnPropertyChanged(string propertyName)
         {
+            if(selectedModel != null)
+            {
+                ModelTransform transform = ModelTransforms[selectedModel];
+                if (transform != null)
+                {
+                    switch (propertyName)
+                    {
+                        case "RotationAxis":
+                            transform.RotationAxis = RotationAxis;
+                            break;
+                        case "RotationAngle":
+                            transform.RotationAngle = RotationAngle;
+                            break;
+                        case "ScaleFactor":
+                            transform.ScaleFactor = ScaleFactor;
+                            break;
+                        case "TranslateXAfter":
+                            transform.TranslateXAfter = TranslateXAfter;
+                            break;
+                        case "TranslateYAfter":
+                            transform.TranslateYAfter = TranslateYAfter;
+                            break;
+                        case "TranslateZAfter":
+                            transform.TranslateZAfter = TranslateZAfter;
+                            break;
+                        case "TranslateXBefore":
+                            transform.TranslateXBefore = TranslateXBefore;
+                            break;
+                        case "TranslateYBefore":
+                            transform.TranslateYBefore = TranslateYBefore;
+                            break;
+                        case "TranslateZBefore":
+                            transform.TranslateZBefore = TranslateZBefore;
+                            break;
+                        default: break;
+                    }
+                }
+            }
+
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        private void UpdateTransformValues(LoadedModel model)
+        {
+            ModelTransform transform;
+            if (model != null)
+                transform = ModelTransforms[model];
+            else
+                transform = new ModelTransform();
+            RotationAxis = transform.RotationAxis;
+            RotationAngle = transform.RotationAngle;
+            ScaleFactor = transform.ScaleFactor;
+            TranslateXAfter = transform.TranslateXAfter;
+            TranslateYAfter = transform.TranslateYAfter;
+            TranslateZAfter = transform.TranslateZAfter;
+            TranslateXBefore = transform.TranslateXBefore;
+            TranslateYBefore = transform.TranslateYBefore;
+            TranslateZBefore = transform.TranslateZBefore;
         }
     }
 

@@ -31,7 +31,6 @@ namespace _3dModelViewer
         private Graphics.Scene scene;
         private Timer loopTimer;
         private MainWindowViewModel viewModel;
-        private LoadedModel loadedModel;
 
         public MainWindow()
         {
@@ -50,7 +49,7 @@ namespace _3dModelViewer
             {
                 case "RotationAxis":
                 case "RotationAngle":
-                    if(loadedModel != null)
+                    if(viewModel.SelectedModel != null)
                     {
                         float angle = (float)(Math.PI / 180 * vm.RotationAngle);
                         Matrix4 rotation;
@@ -60,43 +59,43 @@ namespace _3dModelViewer
                             rotation = Matrix4.CreateRotationY(angle);
                         else
                             rotation = Matrix4.CreateRotationZ(angle);
-                        loadedModel.UserTransform.OnTheFlyRotation = rotation;
+                        viewModel.SelectedModel.UserTransform.OnTheFlyRotation = rotation;
                     }
                     break;
                 case "ScaleFactor":
-                    if (loadedModel != null)
+                    if (viewModel.SelectedModel != null)
                     {
                         float scaleFactor;
                         if(float.TryParse(vm.ScaleFactor, out scaleFactor))
                         {
                             Matrix4 scale = Matrix4.CreateScale(scaleFactor);
-                            loadedModel.UserTransform.ScaleMatrix = scale;
+                            viewModel.SelectedModel.UserTransform.ScaleMatrix = scale;
                         }
                     }
                     break;
                 case "TranslateXAfter":
                 case "TranslateYAfter":
                 case "TranslateZAfter":
-                    if (loadedModel != null)
+                    if (viewModel.SelectedModel != null)
                     {
                         float translateX, translateY, translateZ;
                         if (float.TryParse(vm.TranslateXAfter, out translateX) && float.TryParse(vm.TranslateYAfter, out translateY) && float.TryParse(vm.TranslateZAfter, out translateZ))
                         {
                             Matrix4 translate = Matrix4.CreateTranslation(translateX, translateY, translateZ);
-                            loadedModel.UserTransform.TranslateAfterMatrix = translate;
+                            viewModel.SelectedModel.UserTransform.TranslateAfterMatrix = translate;
                         }
                     }
                     break;
                 case "TranslateXBefore":
                 case "TranslateYBefore":
                 case "TranslateZBefore":
-                    if (loadedModel != null)
+                    if (viewModel.SelectedModel != null)
                     {
                         float translateX, translateY, translateZ;
                         if (float.TryParse(vm.TranslateXBefore, out translateX) && float.TryParse(vm.TranslateYBefore, out translateY) && float.TryParse(vm.TranslateZBefore, out translateZ))
                         {
                             Matrix4 translate = Matrix4.CreateTranslation(translateX, translateY, translateZ);
-                            loadedModel.UserTransform.TranslateBeforeMatrix = translate;
+                            viewModel.SelectedModel.UserTransform.TranslateBeforeMatrix = translate;
                         }
                     }
                     break;
@@ -161,11 +160,6 @@ namespace _3dModelViewer
             }
         }
 
-        private void Window_Loaded(object sender, RoutedEventArgs e)
-        {
-            CreateObjects(scene);
-        }
-
         private void InitializeGlComponent()
         {
             scene = new Graphics.Scene();
@@ -200,38 +194,9 @@ namespace _3dModelViewer
             glc.SwapBuffers();
         }
 
-        private void CreateObjects(Scene scene)
-        {
-            LoadedModel model = LoadModelOfd();
-            if (model != null)
-            {
-                loadedModel = model;
-                scene.LoadedModels.Add(model);
-            }
-        }
-
-        private LoadedModel LoadModelOfd()
-        {
-            OpenFileDialog ofd = new OpenFileDialog();
-            if(ofd.ShowDialog() == System.Windows.Forms.DialogResult.OK)
-            {
-                if (ofd.CheckFileExists)
-                {
-                    string dirName = Path.GetDirectoryName(ofd.FileName);
-                    using (Assimp.AssimpContext importer = new Assimp.AssimpContext())
-                    {
-                        importer.SetConfig(new NormalSmoothingAngleConfig(66.0f));
-                        Assimp.Scene model = importer.ImportFile(ofd.FileName, Assimp.PostProcessPreset.TargetRealTimeMaximumQuality);
-                        return new LoadedModel(model, dirName);
-                    }
-                }
-            }
-            return null;
-        }
-
         private void ApplyRotationButton_Click(object sender, RoutedEventArgs e)
         {
-            if (loadedModel != null)
+            if (viewModel.SelectedModel != null)
             {
                 float angle = (float)(Math.PI / 180 * viewModel.RotationAngle);
                 Matrix4 rotation;
@@ -241,16 +206,16 @@ namespace _3dModelViewer
                     rotation = Matrix4.CreateRotationY(angle);
                 else
                     rotation = Matrix4.CreateRotationZ(angle);
-                loadedModel.UserTransform.RotationMatrixList.Push(rotation);
-                loadedModel.UserTransform.OnTheFlyRotation = Matrix4.Identity;
+                viewModel.SelectedModel.UserTransform.RotationMatrixList.Push(rotation);
+                viewModel.SelectedModel.UserTransform.OnTheFlyRotation = Matrix4.Identity;
                 viewModel.RotationAngle = 0;
             }
         }
         private void UndoRotationButton_Click(object sender, RoutedEventArgs e)
         {
-            if (loadedModel != null)
+            if (viewModel.SelectedModel != null)
             {
-                LoadedModel.ModelTransform mt = loadedModel.UserTransform;
+                LoadedModel.ModelTransform mt = viewModel.SelectedModel.UserTransform;
                 if (mt.RotationMatrixList.Count > 0)
                     mt.RotationMatrixList.Pop();
                 mt.OnTheFlyRotation = Matrix4.Identity;
@@ -259,11 +224,12 @@ namespace _3dModelViewer
         }
         private void AutoCenterButton_Click(object sender, RoutedEventArgs e)
         {
-            if (loadedModel != null)
+            if (viewModel.SelectedModel != null)
             {
+                LoadedModel selectedModel = viewModel.SelectedModel;
                 //scale adjusting
                 float maxSize = 3;
-                Vector3 delta = loadedModel.MaximumPosition - loadedModel.MinimumPosition;
+                Vector3 delta = selectedModel.MaximumPosition - selectedModel.MinimumPosition;
                 float maxDelta = delta.X;
                 if (delta.Y > maxDelta)
                     maxDelta = delta.Y;
@@ -271,13 +237,13 @@ namespace _3dModelViewer
                     maxDelta = delta.Z;
                 float scale = maxSize / maxDelta;
                 Matrix4 scaleMatrix = Matrix4.CreateScale(scale);
-                loadedModel.UserTransform.ScaleMatrix = scaleMatrix;
+                selectedModel.UserTransform.ScaleMatrix = scaleMatrix;
                 viewModel.ScaleFactor = scale.ToString("N8");
                 //centering
-                Vector3 centerOffset = (loadedModel.MaximumPosition + loadedModel.MinimumPosition) / 2;
+                Vector3 centerOffset = (selectedModel.MaximumPosition + selectedModel.MinimumPosition) / 2;
                 centerOffset = new Vector3(scaleMatrix*(new Vector4(centerOffset,1f)));
                 Matrix4 translateBeforeMatrix = Matrix4.CreateTranslation(-centerOffset.X, -centerOffset.Y, -centerOffset.Z);
-                loadedModel.UserTransform.TranslateBeforeMatrix = translateBeforeMatrix;
+                selectedModel.UserTransform.TranslateBeforeMatrix = translateBeforeMatrix;
                 viewModel.TranslateXBefore = (-centerOffset.X).ToString("N4");
                 viewModel.TranslateYBefore = (-centerOffset.Y).ToString("N4");
                 viewModel.TranslateZBefore = (-centerOffset.Z).ToString("N4");
@@ -306,6 +272,50 @@ namespace _3dModelViewer
             {
                 Color color = (ccw.DataContext as ChooseColorViewModel).GetColor();
                 viewModel.FloorColor = color;
+            }
+        }
+
+        private void AddModelButton_Click(object sender, RoutedEventArgs e)
+        {
+            LoadedModel model = LoadModelOfd();
+            if (model != null)
+            {
+                viewModel.LoadedModels.Add(model);
+                viewModel.ModelTransforms.Add(model, new ModelTransform());
+                viewModel.SelectedModel = model;
+                scene.LoadedModels.Add(model);
+            }
+        }
+
+        private LoadedModel LoadModelOfd()
+        {
+            OpenFileDialog ofd = new OpenFileDialog();
+            if (ofd.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+            {
+                if (ofd.CheckFileExists)
+                {
+                    string dirName = Path.GetDirectoryName(ofd.FileName);
+                    using (Assimp.AssimpContext importer = new Assimp.AssimpContext())
+                    {
+                        importer.SetConfig(new NormalSmoothingAngleConfig(66.0f));
+                        Assimp.Scene model = importer.ImportFile(ofd.FileName, Assimp.PostProcessPreset.TargetRealTimeMaximumQuality);
+                        LoadedModel loadedModel = new LoadedModel(model, dirName);
+                        loadedModel.Name = Path.GetFileName(ofd.FileName);
+                        return loadedModel;
+                    }
+                }
+            }
+            return null;
+        }
+
+        private void RemoveModelButton_Click(object sender, RoutedEventArgs e)
+        {
+            if(viewModel.SelectedModel != null)
+            {
+                LoadedModel toDelete = viewModel.SelectedModel;
+                viewModel.LoadedModels.Remove(toDelete);
+                viewModel.SelectedModel = viewModel.LoadedModels.LastOrDefault();
+                scene.LoadedModels.Remove(toDelete);
             }
         }
     }
