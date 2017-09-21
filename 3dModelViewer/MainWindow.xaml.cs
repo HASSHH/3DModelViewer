@@ -295,13 +295,20 @@ namespace _3dModelViewer
                 if (ofd.CheckFileExists)
                 {
                     string dirName = Path.GetDirectoryName(ofd.FileName);
-                    using (Assimp.AssimpContext importer = new Assimp.AssimpContext())
+                    try
                     {
-                        importer.SetConfig(new NormalSmoothingAngleConfig(66.0f));
-                        Assimp.Scene model = importer.ImportFile(ofd.FileName, Assimp.PostProcessPreset.TargetRealTimeMaximumQuality);
-                        LoadedModel loadedModel = new LoadedModel(model, dirName);
-                        loadedModel.Name = Path.GetFileName(ofd.FileName);
-                        return loadedModel;
+                        using (Assimp.AssimpContext importer = new Assimp.AssimpContext())
+                        {
+                            importer.SetConfig(new NormalSmoothingAngleConfig(66.0f));
+                            Assimp.Scene model = importer.ImportFile(ofd.FileName, Assimp.PostProcessPreset.TargetRealTimeMaximumQuality);
+                            LoadedModel loadedModel = new LoadedModel(model, dirName);
+                            loadedModel.Name = Path.GetFileName(ofd.FileName);
+                            return loadedModel;
+                        }
+                    }
+                    catch
+                    {
+                        System.Windows.MessageBox.Show("Unsupported file type.", "Error");
                     }
                 }
             }
