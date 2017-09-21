@@ -26,6 +26,7 @@ namespace _3dModelViewer
         private string lightPosX;
         private string lightPosY;
         private string lightPosZ;
+        private bool isDirectionalLight;
         private string cameraPosX;
         private string cameraPosY;
         private string cameraPosZ;
@@ -147,6 +148,7 @@ namespace _3dModelViewer
         public string LightPosX { get => lightPosX; set { lightPosX = value; OnPropertyChanged("LightPosX"); } }
         public string LightPosY { get => lightPosY; set { lightPosY = value; OnPropertyChanged("LightPosY"); } }
         public string LightPosZ { get => lightPosZ; set { lightPosZ = value; OnPropertyChanged("LightPosZ"); } }
+        public bool IsDirectionalLight { get => isDirectionalLight; set { isDirectionalLight = value; OnPropertyChanged("IsDirectionalLight"); } }
 
         //camera
         public string CameraPosX { get => cameraPosX; set { cameraPosX = value; OnPropertyChanged("CameraPosX"); } }

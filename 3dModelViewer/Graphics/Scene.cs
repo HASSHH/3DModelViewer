@@ -219,7 +219,7 @@ namespace _3dModelViewer.Graphics
             GL.Viewport(0, 0, depthTextureSize, depthTextureSize);
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
             Vector3 lightLookAt = new Vector3(0, 0, 0);
-            Matrix4 depthP = Matrix4.CreatePerspectiveFieldOfView((float)Math.PI/4, 1f, 0.1f, 100f);
+            Matrix4 depthP = Light.IsDirectional ? Matrix4.CreateOrthographic(20f, 20f, 0.1f, 100f) : Matrix4.CreatePerspectiveFieldOfView((float)Math.PI / 4, 1f, 0.1f, 100f);
             Matrix4 depthV = Matrix4.LookAt(Light.Position, lightLookAt, Vector3.UnitY);
             depthVP = depthV * depthP;
             GL.UniformMatrix4(GL.GetUniformLocation(depthProgramHandle, "depthVP"), false, ref depthVP);

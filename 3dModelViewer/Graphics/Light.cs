@@ -20,6 +20,7 @@ namespace _3dModelViewer.Graphics
         public Vector4 Color { get => color; set { color = value; OnPropertyChanged("Color"); } }
         public float Attenuation { get => attenuation; set { attenuation = value; OnPropertyChanged("Attenuation"); } }
         public bool Active { get; set; } = true;
+        public bool IsDirectional { get; set; } = false;
 
         private void OnPropertyChanged(string propertyName)
         {

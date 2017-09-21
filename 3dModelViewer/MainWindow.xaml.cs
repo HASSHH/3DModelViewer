@@ -120,6 +120,10 @@ namespace _3dModelViewer
                             scene.Light.Position = new Vector3(posx, posy, posz);
                     }
                     break;
+                case "IsDirectionalLight":
+                    if (scene != null)
+                        scene.Light.IsDirectional = viewModel.IsDirectionalLight;
+                    break;
                 case "CameraPosX":
                 case "CameraPosY":
                 case "CameraPosZ":

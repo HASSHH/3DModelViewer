@@ -11,7 +11,7 @@
         <local:MainWindowViewModel RotationAngle="0" ScaleFactor="1" 
                                    TranslateXAfter="0" TranslateYAfter="0" TranslateZAfter="0"
                                    TranslateXBefore="0" TranslateYBefore="0" TranslateZBefore="0"
-                                   LightColor="White" LightAttenuation="0.0001" LightPosX="20" LightPosY="20" LightPosZ="20"
+                                   LightColor="White" LightAttenuation="0.0001" LightPosX="20" LightPosY="20" LightPosZ="20" IsDirectionalLight="False"
                                    CameraPosX="0" CameraPosY="1" CameraPosZ="5"
                                    CameraLookAtX="0" CameraLookAtY="0" CameraLookAtZ="0"
                                    FloorColor="Red" FloorElevation="0"/>
@@ -174,6 +174,10 @@
                         <TextBox Text="{Binding LightPosZ, UpdateSourceTrigger=Explicit}" TextChanged="TextBox_TextChanged"/>
                     </DockPanel>
                 </Grid>
+                <DockPanel>
+                    <Label DockPanel.Dock="Left" Content="Is directional: "/>
+                    <CheckBox IsChecked="{Binding IsDirectionalLight}" VerticalAlignment="Center"/>
+                </DockPanel>
             </StackPanel>
             <StackPanel Grid.Row="1" Style="{StaticResource ComponentStackPanel}">
                 <Label Content="Camera" Style="{StaticResource ComponentLabel}"/>
