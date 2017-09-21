@@ -9,7 +9,7 @@ using OpenTK.Graphics.OpenGL;
 
 namespace _3dModelViewer.Graphics
 {
-    public class LoadedModel
+    public class LoadedModel : IDisposable
     {
         public readonly List<LoadedMesh> Meshes = new List<LoadedMesh>();
         public readonly List<LoadedMaterial> Materials = new List<LoadedMaterial>();
@@ -188,6 +188,15 @@ namespace _3dModelViewer.Graphics
             public Matrix4 TranslateBeforeMatrix { get => translateBeforeMatrix; set => translateBeforeMatrix = value; }
             public Matrix4 ScaleMatrix { get => scaleMatrix; set => scaleMatrix = value; }
             public Matrix4 OnTheFlyRotation { get => onTheFlyRotation; set => onTheFlyRotation = value; }
+        }
+
+        public void Dispose()
+        {
+            foreach (LoadedMaterial mat in Materials)
+                mat.Dispose();
+            foreach (LoadedMesh mesh in Meshes)
+                mesh.Dispose();
+            RootNode?.Dispose();
         }
     }
 }

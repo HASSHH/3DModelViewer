@@ -316,6 +316,7 @@ namespace _3dModelViewer
                 viewModel.LoadedModels.Remove(toDelete);
                 viewModel.SelectedModel = viewModel.LoadedModels.LastOrDefault();
                 scene.LoadedModels.Remove(toDelete);
+                toDelete.Dispose();
             }
         }
     }

@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 
 namespace _3dModelViewer.Graphics
 {
-    public class LoadedMaterial
+    public class LoadedMaterial : IDisposable
     {
         private int textureDiffuseHandler;
         private int textureNormalHandler;
@@ -140,6 +140,13 @@ namespace _3dModelViewer.Graphics
             {
                 textureId = 0;
             }
+        }
+
+        public void Dispose()
+        {
+            GL.DeleteTexture(textureDiffuseHandler);
+            GL.DeleteTexture(textureSpecularHandler);
+            GL.DeleteTexture(textureNormalHandler);
         }
     }
 }

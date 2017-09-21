@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace _3dModelViewer.Graphics
 {
-    public class LoadedMesh
+    public class LoadedMesh : IDisposable
     {
         public Vector3 MinimumPosition;
         public Vector3 MaximumPosition;
@@ -136,6 +136,14 @@ namespace _3dModelViewer.Graphics
             GL.BindBuffer(BufferTarget.ElementArrayBuffer, eboHandler);
             GL.BufferData(BufferTarget.ElementArrayBuffer, sizeof(int) * indices.Length, indices, BufferUsageHint.StaticDraw);
             GL.BindBuffer(BufferTarget.ElementArrayBuffer, 0);
+        }
+
+        public void Dispose()
+        {
+            GL.DeleteBuffer(positionVboHandler);
+            GL.DeleteBuffer(uvVboHandler);
+            GL.DeleteBuffer(normalVboHandler);
+            GL.DeleteBuffer(eboHandler);
         }
     }
 }
