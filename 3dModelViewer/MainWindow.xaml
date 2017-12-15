@@ -182,7 +182,7 @@
             <StackPanel Grid.Row="1" Style="{StaticResource ComponentStackPanel}">
                 <Label Content="Camera" Style="{StaticResource ComponentLabel}"/>
                 <Label Content="Position: "/>
-                <Grid>
+                <Grid Name="CameraPositionControls">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition/>
                         <ColumnDefinition/>
@@ -202,7 +202,7 @@
                     </DockPanel>
                 </Grid>
                 <Label Content="Look at: "/>
-                <Grid>
+                <Grid Name="CameraLookAtControls">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition/>
                         <ColumnDefinition/>
@@ -221,11 +221,37 @@
                         <TextBox Text="{Binding CameraLookAtZ, UpdateSourceTrigger=Explicit}" TextChanged="TextBox_TextChanged"/>
                     </DockPanel>
                 </Grid>
+                <DockPanel Margin="0,20,0,0">
+                    <Label DockPanel.Dock="Left" Content="Free camera: " Margin="0,0,10,0"
+                           ToolTipService.InitialShowDelay="0" ToolTipService.ShowDuration="360000">
+                        <Label.ToolTip>
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="Rotate camera" FontWeight="Bold"/>
+                                    <TextBlock Text=" - mouse right click + drag"/>
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="Move forward/backward" FontWeight="Bold"/>
+                                    <TextBlock Text=" - W/S"/>
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="Move left/right" FontWeight="Bold"/>
+                                    <TextBlock Text=" - A/D"/>
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="Move up/down" FontWeight="Bold"/>
+                                    <TextBlock Text=" - Q/E"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Label.ToolTip>
+                    </Label>
+                    <CheckBox IsChecked="{Binding FreeCameraEnabled}" VerticalAlignment="Center"/>
+                </DockPanel>
             </StackPanel>
             <StackPanel Grid.Row="2" Style="{StaticResource ComponentStackPanel}">
                 <Label Content="Floor" Style="{StaticResource ComponentLabel}"/>
                 <DockPanel>
-                    <Label DockPanel.Dock="Left" Content="Enable floor: " Margin="0,0,20,0"/>
+                    <Label DockPanel.Dock="Left" Content="Enable floor: " Margin="0,0,10,0"/>
                     <CheckBox IsChecked="{Binding FloorEnabled}" VerticalAlignment="Center"/>
                 </DockPanel>
                 <StackPanel Orientation="Horizontal" Margin="0, 10, 0, 0">

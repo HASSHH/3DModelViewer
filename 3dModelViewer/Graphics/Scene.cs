@@ -113,7 +113,7 @@ namespace _3dModelViewer.Graphics
                 GL.Viewport(0, 0, viewPortWidth, viewPortHeight);
                 GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
                 GL.UseProgram(shaderProgramHandle);
-
+                
                 GL.UniformMatrix4(GL.GetUniformLocation(shaderProgramHandle, "depthVP"), false, ref depthVP);
                 GL.ActiveTexture(TextureUnit.Texture3);
                 GL.BindTexture(TextureTarget.Texture2D, depthTexture);

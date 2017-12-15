@@ -31,6 +31,8 @@ namespace _3dModelViewer
         private Graphics.Scene scene;
         private Timer loopTimer;
         private MainWindowViewModel viewModel;
+        private MousePosition oldMousePosition;
+        private bool freeCamera = false;
 
         public MainWindow()
         {
@@ -144,6 +146,15 @@ namespace _3dModelViewer
                             scene.Camera.LookAt = new Vector3(posx, posy, posz);
                     }
                     break;
+                case "FreeCameraEnabled":
+                    if (scene != null)
+                    {
+                        CameraLookAtControls.IsEnabled = !CameraLookAtControls.IsEnabled;
+                        CameraPositionControls.IsEnabled = !CameraPositionControls.IsEnabled;
+                        freeCamera = !freeCamera;
+                        UpdateCameraDisplayedValues();
+                    }
+                    break;
                 case "FloorEnabled":
                     if (scene != null)
                         scene.DrawFloorEnabled = viewModel.FloorEnabled;
@@ -171,6 +182,10 @@ namespace _3dModelViewer
             Toolkit.Init();
             glc.Paint += Draw;
             glc.Resize += Resize;
+            glc.MouseMove += Glc_MouseMove;
+            glc.MouseUp += (s, e) => ClearMousePosition();
+            glc.MouseLeave += (s, e) => ClearMousePosition();
+            glc.PreviewKeyDown += Glc_PreviewKeyDown;
             WfHost.Child = glc;
             glc.CreateControl();
         }
@@ -196,6 +211,54 @@ namespace _3dModelViewer
             }
             scene.Draw();
             glc.SwapBuffers();
+        }
+
+        private void Glc_MouseMove(object sender, System.Windows.Forms.MouseEventArgs e)
+        {
+            if (freeCamera && scene != null && e.Button == MouseButtons.Right)
+            {
+                MousePosition newMousePosition = new MousePosition { X = e.X, Y = e.Y };
+                if (oldMousePosition != null)
+                {
+                    int xMovement = oldMousePosition.X - newMousePosition.X;
+                    int yMovement = newMousePosition.Y - oldMousePosition.Y;
+                    float movementToUnitScale = 100f / glc.Height;
+                    float xUnits = movementToUnitScale * yMovement;
+                    float yUnits = -movementToUnitScale * xMovement;
+                    scene.Camera.FreeCameraRotate(yUnits, xUnits);
+                }
+                oldMousePosition = newMousePosition;
+            }
+        }
+
+        private void Glc_PreviewKeyDown(object sender, PreviewKeyDownEventArgs e)
+        {
+            if(freeCamera && scene != null)
+            {
+                switch (e.KeyCode)
+                {
+                    case Keys.W:
+                        scene.Camera.FreeCameraMoveForwardBackward(true);
+                        break;
+                    case Keys.S:
+                        scene.Camera.FreeCameraMoveForwardBackward(false);
+                        break;
+                    case Keys.Q:
+                        scene.Camera.FreeCameraMoveUpDown(true);
+                        break;
+                    case Keys.E:
+                        scene.Camera.FreeCameraMoveUpDown(false);
+                        break;
+                    case Keys.A:
+                        scene.Camera.FreeCameraMoveLeftRight(true);
+                        break;
+                    case Keys.D:
+                        scene.Camera.FreeCameraMoveLeftRight(false);
+                        break;
+                    default:
+                        break;
+                }
+            }
         }
 
         private void ApplyRotationButton_Click(object sender, RoutedEventArgs e)
@@ -251,6 +314,22 @@ namespace _3dModelViewer
                 viewModel.TranslateXBefore = (-centerOffset.X).ToString("N4");
                 viewModel.TranslateYBefore = (-centerOffset.Y).ToString("N4");
                 viewModel.TranslateZBefore = (-centerOffset.Z).ToString("N4");
+            }
+        }
+
+        private void UpdateCameraDisplayedValues()
+        {
+            if(scene != null)
+            {
+                //backup camera lookat and position
+                Vector3 lookAt = scene.Camera.LookAt;
+                Vector3 position = scene.Camera.Position;
+                viewModel.CameraPosX = position.X.ToString("N4");
+                viewModel.CameraPosY = position.Y.ToString("N4");
+                viewModel.CameraPosZ = position.Z.ToString("N4");
+                viewModel.CameraLookAtX = lookAt.X.ToString("N4");
+                viewModel.CameraLookAtY = lookAt.Y.ToString("N4");
+                viewModel.CameraLookAtZ = lookAt.Z.ToString("N4");
             }
         }
 
@@ -329,6 +408,16 @@ namespace _3dModelViewer
                 scene.LoadedModels.Remove(toDelete);
                 toDelete.Dispose();
             }
+        }
+        private void ClearMousePosition()
+        {
+            oldMousePosition = null;
+        }
+
+        public class MousePosition
+        {
+            public int X { get; set; }
+            public int Y { get; set; }
         }
     }
 }

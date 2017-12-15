@@ -27,12 +27,13 @@ namespace _3dModelViewer
         private string lightPosY;
         private string lightPosZ;
         private bool isDirectionalLight;
-        private string cameraPosX;
-        private string cameraPosY;
-        private string cameraPosZ;
-        private string cameraLookAtX;
-        private string cameraLookAtY;
-        private string cameraLookAtZ;
+        internal string cameraPosX;
+        internal string cameraPosY;
+        internal string cameraPosZ;
+        internal string cameraLookAtX;
+        internal string cameraLookAtY;
+        internal string cameraLookAtZ;
+        private bool freeCameraEnabled;
         private Color floorColor;
         private string floorElevation;
         private bool floorEnabled;
@@ -157,6 +158,7 @@ namespace _3dModelViewer
         public string CameraLookAtX { get => cameraLookAtX; set { cameraLookAtX = value; OnPropertyChanged("CameraLookAtX"); } }
         public string CameraLookAtY { get => cameraLookAtY; set { cameraLookAtY = value; OnPropertyChanged("CameraLookAtY"); } }
         public string CameraLookAtZ { get => cameraLookAtZ; set { cameraLookAtZ = value; OnPropertyChanged("CameraLookAtZ"); } }
+        public bool FreeCameraEnabled { get => freeCameraEnabled; set { freeCameraEnabled = value; OnPropertyChanged("FreeCameraEnabled"); } }
 
         //floor
         public Color FloorColor { get => floorColor; set { floorColor = value; OnPropertyChanged("FloorColor"); } }
